@@ -1,4 +1,6 @@
+const cheerio = require("cheerio");
 const functions = require("firebase-functions");
+const querystring = require("querystring");
 const requestPromise = require("request-promise");
 const xml2js = require("xml2js");
 
@@ -102,25 +104,53 @@ class WaterlooPublicLibraryApi {
   }
 
   /**
-   * Returns book availability at the library based on ISBN.
+   * Returns book availability at the library based on book name.
+   *
+   * Originally I planned to use ISBN but it turns out that books often have
+   * multiple editions each with a different ISBN. Often times the ISBN of the
+   * book on my Goodreads would not match an entry in WPL but WPL would have
+   * a different version.
    */
-  getBookAvailability(isbn) {
-    console.log(`Requesting book availability for ISBN: ${isbn}`);
+  getBookAvailability(title) {
+    console.log(`[wpl][${title}]: Requesting availability`);
+    const normalizedTitle = this.normalizeBookTitle(title);
+    const encodedTitle = querystring.escape(normalizedTitle);
     const options = {
-      uri: "https://www.goodreads.com/review/list",
+      uri: `http://encore.kpl.org/iii/encore_wpl/search/C__St:(${encodedTitle})`,
       qs: {
-        "v": 2,
-        "id": goodreadsUserId, // User-provided value, proceed with caution.
-        "shelf": "to-read",
-        "format": "xml", // No JSON :/
-        // TODO set back to 200
-        "per_page": 10, // TODO: Support list of >200 with paging.
-        "key": this.goodreadsKey,
+        "lang": "eng",
+      },
+      headers: {
+        "User-Agent": "Request-Promise", // Required by WPL.
       },
     };
     return requestPromise(options)
       .then((response) => {
-        return this.getBooksFromXmlResponse(response);
+        const $ = cheerio.load(response);
+        const results = $(".searchResult");
+        console.log(`[wpl][${title}]: Found ${results.length} results`);
+        const parsedResults = results.map((index, element) => {
+          const titleNode = $(element).find(".title");
+          const idAttr = $(element).attr("id");
+          const recordId = idAttr ? idAttr.replace("resultRecord-", "") : "";
+          const recordUrl =
+              recordId
+                  ? `http://encore.kpl.org/iii/encore_wpl/record/C__R${recordId}?lang=eng`
+                  : "";
+          const mediaTypeNode = $(element).find(".itemMediaDescription")
+          return {
+            title: titleNode.length ? titleNode.first().text().trim(): "",
+            recordId: recordId,
+            recordUrl: recordUrl,
+            mediaType:
+                mediaTypeNode.length ? mediaTypeNode.first().text().trim(): "",
+          };
+        }).get();
+        return parsedResults;
+      })
+      .then((parsedResults) => {
+        // TODO figure out how to fan out promises to get availability and reduce.
+        return parsedResults;
       })
       .catch((error) => {
         console.log("found error");
@@ -128,14 +158,33 @@ class WaterlooPublicLibraryApi {
         return error;
       });
   }
+
+  /**
+   * Normalizes a book title for searching and matching.
+   */
+  normalizeBookTitle(title) {
+    return title.replace(/[^A-Za-z'\.\s]/g, "").toLowerCase();
+  }
+
+  /**
+   * Filters search results to only those appearing to match the intended
+   * query.
+   */
+  filterResults(title, results) {
+  }
 }
+const wplApi = new WaterlooPublicLibraryApi();
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
 exports.getBooks = functions.https.onRequest((request, response) => {
-  // console.log('getting info for book: 0553380966 ');
-  // return;
+  // Uncomment to continue dev on WPL api.
+  // return wplApi.getBookAvailability("Superintelligence: Paths, Dangers, Strategies")
+  //   .then((bookAvailability) => {
+  //     response.send(bookAvailability);
+  //     return;
+  //   });
 
   if (!request.query.goodreadsUserId) {
     console.log("Missing goodreadsUserId URL param");
