@@ -4,6 +4,11 @@ const querystring = require("querystring");
 const requestPromise = require("request-promise");
 const xml2js = require("xml2js");
 
+const USER_AGENT = "Request-Promise";
+const COMMON_HEADERS = {
+  "User-Agent": USER_AGENT,
+};
+
 /**
  * Goodreads API to retrieve the list of books to read.
  * Docs: https://www.goodreads.com/api/
@@ -38,6 +43,7 @@ class GoodreadsApi {
         "per_page": 10, // TODO: Support list of >200 with paging.
         "key": this.goodreadsKey,
       },
+      headers: COMMON_HEADERS,
     };
     return requestPromise(options)
       .then((response) => {
@@ -112,7 +118,7 @@ class WaterlooPublicLibraryApi {
    * a different version.
    */
   getBookAvailability(title) {
-    console.log(`[wpl][${title}]: Requesting availability`);
+    console.log(`[wpl][${title}]: Searching catalog...`);
     const normalizedTitle = this.normalizeBookTitle(title);
     const encodedTitle = querystring.escape(normalizedTitle);
     const options = {
@@ -120,16 +126,14 @@ class WaterlooPublicLibraryApi {
       qs: {
         "lang": "eng",
       },
-      headers: {
-        "User-Agent": "Request-Promise", // Required by WPL.
-      },
+      headers: COMMON_HEADERS,
     };
     return requestPromise(options)
       .then((response) => {
         const $ = cheerio.load(response);
         const results = $(".searchResult");
         console.log(`[wpl][${title}]: Found ${results.length} results`);
-        const parsedResults = results.map((index, element) => {
+        const bookRecords = results.map((index, element) => {
           const titleNode = $(element).find(".title");
           const idAttr = $(element).attr("id");
           const recordId = idAttr ? idAttr.replace("resultRecord-", "") : "";
@@ -146,16 +150,48 @@ class WaterlooPublicLibraryApi {
                 mediaTypeNode.length ? mediaTypeNode.first().text().trim(): "",
           };
         }).get();
-        return parsedResults;
+        const filteredBookRecords = this.filterBookRecords(title, bookRecords);
+        console.log(
+            `[wpl][${title}]: Found ${filteredBookRecords.length} after filtering`);
+        return Promise.all(filteredBookRecords.map((bookRecord) => {
+          return this.getBookRecordAvailability(bookRecord);
+        }));
       })
-      .then((parsedResults) => {
-        // TODO figure out how to fan out promises to get availability and reduce.
-        return parsedResults;
-      })
+      //.then((bookRecords) => {
+      //  return bookRecords;
+      //})
       .catch((error) => {
         console.log("found error");
         console.log(error);
         return error;
+      });
+  }
+
+  /**
+   * Returns promise with book availability for a book record.
+   */
+  getBookRecordAvailability(bookRecord) {
+    console.log(`[wpl][${bookRecord.recordId}]: Getting availability at ${bookRecord.recordUrl}`);
+    const options = {
+      uri: bookRecord.recordUrl,
+      headers: COMMON_HEADERS,
+    };
+    return requestPromise(options)
+      .then((response) => {
+        const $ = cheerio.load(response);
+        const rows = $(".itemTable").find("tr");
+        // Remove header row.
+        const dataRows = rows.slice(1, rows.length);
+        bookRecord.availabilities = dataRows.map((index, dataRowEl) => {
+          const dataColumns = $(dataRowEl).find("td");
+          return {
+            location: dataColumns.eq(0).text().trim(),
+            callNumber: dataColumns.eq(1).text().trim(),
+            status: dataColumns.eq(2).text().trim(),
+          };
+        }).get();
+        console.log(`[wpl][${bookRecord.recordId}]: Found ${bookRecord.availabilities.length} copies`);
+        return bookRecord;
       });
   }
 
@@ -170,7 +206,10 @@ class WaterlooPublicLibraryApi {
    * Filters search results to only those appearing to match the intended
    * query.
    */
-  filterResults(title, results) {
+  filterBookRecords(title, bookRecords) {
+    return bookRecords.filter((bookRecord) => {
+      return bookRecord.mediaType === "Book";
+    });
   }
 }
 const wplApi = new WaterlooPublicLibraryApi();
@@ -180,11 +219,12 @@ const wplApi = new WaterlooPublicLibraryApi();
 //
 exports.getBooks = functions.https.onRequest((request, response) => {
   // Uncomment to continue dev on WPL api.
-  // return wplApi.getBookAvailability("Superintelligence: Paths, Dangers, Strategies")
-  //   .then((bookAvailability) => {
-  //     response.send(bookAvailability);
-  //     return;
-  //   });
+  //return wplApi.getBookAvailability("Superintelligence: Paths, Dangers, Strategies")
+  return wplApi.getBookAvailability("The three body problem")
+    .then((bookAvailability) => {
+      response.send(bookAvailability);
+      return;
+    });
 
   if (!request.query.goodreadsUserId) {
     console.log("Missing goodreadsUserId URL param");
