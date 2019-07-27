@@ -110,14 +110,16 @@ class WaterlooPublicLibraryApi {
   }
 
   /**
-   * Returns book availability at the library based on book name.
+   * Returns availability at the library for a Goodreads book.
    *
+   * This relies primarily on title for now.
    * Originally I planned to use ISBN but it turns out that books often have
    * multiple editions each with a different ISBN. Often times the ISBN of the
    * book on my Goodreads would not match an entry in WPL but WPL would have
    * a different version.
    */
-  getBookAvailability(title) {
+  getBookAvailability(grBook) {
+    const title = grBook.title;
     console.log(`[wpl][${title}]: Searching catalog...`);
     const normalizedTitle = this.normalizeBookTitle(title);
     const encodedTitle = querystring.escape(normalizedTitle);
@@ -157,9 +159,12 @@ class WaterlooPublicLibraryApi {
           return this.getBookRecordAvailability(bookRecord);
         }));
       })
-      //.then((bookRecords) => {
-      //  return bookRecords;
-      //})
+      .then((bookRecords) => {
+        return {
+          grBook: grBook,
+          libraryBooks: bookRecords,
+        };
+      })
       .catch((error) => {
         console.log("found error");
         console.log(error);
@@ -220,11 +225,12 @@ const wplApi = new WaterlooPublicLibraryApi();
 exports.getBooks = functions.https.onRequest((request, response) => {
   // Uncomment to continue dev on WPL api.
   //return wplApi.getBookAvailability("Superintelligence: Paths, Dangers, Strategies")
-  return wplApi.getBookAvailability("The three body problem")
-    .then((bookAvailability) => {
-      response.send(bookAvailability);
-      return;
-    });
+  // return wplApi.getBookAvailability({
+  //   title: "The three body problem",
+  // }).then((bookAvailability) => {
+  //     response.send(bookAvailability);
+  //     return;
+  //   });
 
   if (!request.query.goodreadsUserId) {
     console.log("Missing goodreadsUserId URL param");
@@ -233,6 +239,11 @@ exports.getBooks = functions.https.onRequest((request, response) => {
   }
 
   return goodreadsApi.getBooksToRead(request.query.goodreadsUserId)
+    .then((grBooks) => {
+      return Promise.all(grBooks.map((grBook) => {
+        return wplApi.getBookAvailability(grBook);
+      }));
+    })
     .then((books) => {
       response
         // Disable CORS for prototyping
