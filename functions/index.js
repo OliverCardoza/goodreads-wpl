@@ -123,12 +123,14 @@ class WaterlooPublicLibraryApi {
     console.log(`[wpl][${title}]: Searching catalog...`);
     const normalizedTitle = this.normalizeBookTitle(title);
     const encodedTitle = querystring.escape(normalizedTitle);
+    const url = `https://encore.kpl.org/iii/encore_wpl/search/C__St:(${encodedTitle})?lang=eng`;
     const options = {
-      uri: `http://encore.kpl.org/iii/encore_wpl/search/C__St:(${encodedTitle})`,
+      uri: url,
       qs: {
         "lang": "eng",
       },
       headers: COMMON_HEADERS,
+      insecure: true,
     };
     return requestPromise(options)
       .then((response) => {
@@ -141,7 +143,7 @@ class WaterlooPublicLibraryApi {
           const recordId = idAttr ? idAttr.replace("resultRecord-", "") : "";
           const recordUrl =
               recordId
-                  ? `http://encore.kpl.org/iii/encore_wpl/record/C__R${recordId}?lang=eng`
+                  ? `https://encore.kpl.org/iii/encore_wpl/record/C__R${recordId}?lang=eng`
                   : "";
           const mediaTypeNode = $(element).find(".itemMediaDescription")
           return {
@@ -180,6 +182,7 @@ class WaterlooPublicLibraryApi {
     const options = {
       uri: bookRecord.recordUrl,
       headers: COMMON_HEADERS,
+      insecure: true,
     };
     return requestPromise(options)
       .then((response) => {
@@ -195,16 +198,40 @@ class WaterlooPublicLibraryApi {
             status: dataColumns.eq(2).text().trim(),
           };
         }).get();
-        console.log(`[wpl][${bookRecord.recordId}]: Found ${bookRecord.availabilities.length} copies`);
+        bookRecord.status = this.createBookStatus(bookRecord.availabilities);
+        console.log(`[wpl][${bookRecord.recordId}]: Status = "${bookRecord.status}"`);
         return bookRecord;
       });
+  }
+
+  /**
+   * Creates a short string status line based on this book's availability.
+   *
+   * WPL book status has a few options with only "CHECK SHELVES" meaning
+   * available. Documenting some options I've seen below:
+   * - DUE MM-DD-YY
+   * - # HOLD
+   * - DAMAGE CHECK
+   * - CHECK SHELVES
+   * - IN TRANSIT
+   */
+  createBookStatus(availabilities) {
+    const availableRegex = /CHECK SHELVES/i;
+    const numAvailable = availabilities.reduce((accumulator, availability) => {
+      if (availability.status.match(availableRegex)) {
+        return accumulator + 1;
+      }
+      return accumulator;
+    }, 0);
+    const shortStatus = numAvailable > 0 ? "AVAILABLE" : "NOT AVAILABLE";
+    return `${shortStatus}: ${numAvailable} of ${availabilities.length} copies available`;
   }
 
   /**
    * Normalizes a book title for searching and matching.
    */
   normalizeBookTitle(title) {
-    return title.replace(/[^A-Za-z'\.\s]/g, "").toLowerCase();
+    return title.replace(/[^A-Za-z'.\s]/g, "").toLowerCase();
   }
 
   /**
@@ -219,10 +246,14 @@ class WaterlooPublicLibraryApi {
 }
 const wplApi = new WaterlooPublicLibraryApi();
 
+const runtimeOpts = {
+    timeoutSeconds: 300,
+};
+
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-exports.getBooks = functions.https.onRequest((request, response) => {
+exports.getBooks = functions.runWith(runtimeOpts).https.onRequest((request, response) => {
   // Uncomment to continue dev on WPL api.
   //return wplApi.getBookAvailability("Superintelligence: Paths, Dangers, Strategies")
   // return wplApi.getBookAvailability({
