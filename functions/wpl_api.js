@@ -2,9 +2,7 @@ const cheerio = require("cheerio");
 const querystring = require("querystring");
 const requestPromise = require("request-promise");
 
-const COMMON_HEADERS = {
-  "User-Agent": "Request-Promise",
-};
+const constants = require("./constants");
 
 /**
  * Waterloo Public Library API to retrieve book availability info.
@@ -33,7 +31,7 @@ class WaterlooPublicLibraryApi {
       qs: {
         "lang": "eng",
       },
-      headers: COMMON_HEADERS,
+      headers: constants.COMMON_HEADERS,
       insecure: true,
     };
     return requestPromise(options)
@@ -85,7 +83,7 @@ class WaterlooPublicLibraryApi {
     console.log(`[wpl][${bookRecord.recordId}]: Getting availability at ${bookRecord.recordUrl}`);
     const options = {
       uri: bookRecord.recordUrl,
-      headers: COMMON_HEADERS,
+      headers: constants.COMMON_HEADERS,
       insecure: true,
     };
     return requestPromise(options)

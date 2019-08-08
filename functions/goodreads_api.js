@@ -1,9 +1,7 @@
 const requestPromise = require("request-promise");
 const xml2js = require("xml2js");
 
-const COMMON_HEADERS = {
-  "User-Agent": "Request-Promise",
-};
+const constants = require("./constants");
 
 /**
  * Goodreads API to retrieve the list of books to read.
@@ -39,7 +37,7 @@ class GoodreadsApi {
         "per_page": 10, // TODO: Support list of >200 with paging.
         "key": this.goodreadsKey,
       },
-      headers: COMMON_HEADERS,
+      headers: constants.COMMON_HEADERS,
     };
     return requestPromise(options)
       .then((response) => {
