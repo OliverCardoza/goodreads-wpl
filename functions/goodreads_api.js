@@ -13,8 +13,8 @@ class GoodreadsApi {
   constructor() {
     /**
      * The key identifying this application to Goodreads.
-     * It's better practice to not check this in but since it's only used for
-     * reads it's not a big deal.
+     * It's better practice to not check this in to git but since it's only
+     * used for reads it's not a big deal.
      * Docs: https://www.goodreads.com/api/keys
      */
     this.goodreadsKey = "vX4SiJZGCXiLglZ0FndqA";
@@ -27,7 +27,7 @@ class GoodreadsApi {
    * Docs: https://www.goodreads.com/api/index#reviews.list
    */
   getBooksToRead(goodreadsUserId) {
-    console.log(`Requesting books for user ${goodreadsUserId}`);
+    console.log(`[goodreads][${goodreadsUserId}]: Requesting books on "to-read" shelf.`);
     const options = {
       uri: "https://www.goodreads.com/review/list",
       qs: {
@@ -43,10 +43,10 @@ class GoodreadsApi {
     };
     return requestPromise(options)
       .then((response) => {
-        return this.getBooksFromXmlResponse(response);
+        return this.getBooksFromXmlResponse(response, goodreadsUserId);
       })
       .catch((error) => {
-        console.log("found error");
+        console.log(`[goodreads][${goodreadsUserId}]: found error`);
         console.log(error);
         return error;
       });
@@ -55,11 +55,11 @@ class GoodreadsApi {
    /**
    * Retrieves a list of books from a Goodreads XML response.
    */
-  getBooksFromXmlResponse(xmlResponse) {
+  getBooksFromXmlResponse(xmlResponse, goodreadsUserId) {
     return new Promise((resolve, reject) => {
       xml2js.parseString(xmlResponse, (err, result) => {
         if (err) {
-          console.log("Error parsing XML");
+          console.log(`[goodreads][${goodreadsUserId}]: Error parsing XML`);
           reject(err);
         }
         // TODO: Be more defensive if fields missing.
@@ -76,7 +76,7 @@ class GoodreadsApi {
               this.maybeGetFallbackCoverUrl(book.imageUrl, book.isbn);
           books.push(book);
         }
-        console.log(`Returning ${books.length} books`);
+        console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books on the "to-read" shelf.`);
         resolve(books);
       });
     });
