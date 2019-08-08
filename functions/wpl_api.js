@@ -32,6 +32,7 @@ class WaterlooPublicLibraryApi {
         "lang": "eng",
       },
       headers: constants.COMMON_HEADERS,
+      // Required because some search results pages have some insecure content.
       insecure: true,
     };
     return requestPromise(options)
@@ -84,6 +85,7 @@ class WaterlooPublicLibraryApi {
     const options = {
       uri: bookRecord.recordUrl,
       headers: constants.COMMON_HEADERS,
+      // Required because some search results pages have some insecure content.
       insecure: true,
     };
     return requestPromise(options)
