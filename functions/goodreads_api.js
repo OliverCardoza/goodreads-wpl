@@ -60,19 +60,25 @@ class GoodreadsApi {
           console.log(`[goodreads][${goodreadsUserId}]: Error parsing XML`);
           reject(err);
         }
-        // TODO: Be more defensive if fields missing.
-        const reviews = result.GoodreadsResponse.reviews[0];
         const books = [];
-        for (let review of reviews.review) {
-          const grBook = review.book[0]
-          const book = {
-            title: grBook.title[0],
-            isbn: grBook.isbn[0],
-            imageUrl: grBook.image_url[0],
+        if (result && result.GoodreadsResponse && result.GoodreadsResponse.reviews &&
+            result.GoodreadsResponse.reviews.length > 0 &&
+            result.GoodreadsResponse.reviews[0].review &&
+            result.GoodreadsResponse.reviews[0].review.length > 0) {
+          const reviews = result.GoodreadsResponse.reviews[0].review;
+          for (let review of reviews) {
+            if (review.book && review.book.length > 0) {
+              const grBook = review.book[0];
+              const book = {
+                title: grBook.title.length > 0 ? grBook.title[0] : "",
+                isbn: grBook.isbn.length > 0 ? grBook.isbn[0] : "",
+                imageUrl: grBook.image_url.length > 0 ? grBook.image_url[0] : null,
+              };
+              book.imageUrl =
+                  this.maybeGetFallbackCoverUrl(book.imageUrl, book.isbn);
+              books.push(book);
+            }
           }
-          book.imageUrl =
-              this.maybeGetFallbackCoverUrl(book.imageUrl, book.isbn);
-          books.push(book);
         }
         console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books on the "to-read" shelf.`);
         resolve(books);
@@ -87,7 +93,7 @@ class GoodreadsApi {
    * https://www.goodreads.com/topic/show/18208456-api-issue---cover-images
    */
   maybeGetFallbackCoverUrl(goodreadsImageUrl, isbn) {
-    if (goodreadsImageUrl.indexOf("nophoto") !== -1) {
+    if (goodreadsImageUrl && goodreadsImageUrl.indexOf("nophoto") !== -1) {
       return `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
     }
     return goodreadsImageUrl;
