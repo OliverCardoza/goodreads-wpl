@@ -23,6 +23,7 @@ exports.getBooks = functions.runWith(runtimeOpts).https.onRequest((request, resp
 
   return goodreadsApi.getBooksToRead(request.query.goodreadsUserId)
     .then((grBooks) => {
+      // TODO: Limit grBooks which are requested from WPL.
       return Promise.all(grBooks.map((grBook) => {
         return wplApi.getBookAvailability(grBook);
       }));

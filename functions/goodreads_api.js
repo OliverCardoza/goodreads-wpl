@@ -3,6 +3,11 @@ const xml2js = require("xml2js");
 
 const constants = require("./constants");
 
+// The number of pages of results to request from Goodreads.
+const MAX_GOODREADS_PAGES = 10;
+// The number of books to request per page of results from Goodreads.
+const BOOKS_PER_PAGE = 20;
+
 /**
  * Goodreads API to retrieve the list of books to read.
  * Docs: https://www.goodreads.com/api/
@@ -24,8 +29,34 @@ class GoodreadsApi {
    * parses the XMl response (json not supported :/).
    * Docs: https://www.goodreads.com/api/index#reviews.list
    */
-  getBooksToRead(goodreadsUserId) {
+  async getBooksToRead(goodreadsUserId) {
     console.log(`[goodreads][${goodreadsUserId}]: Requesting books on "to-read" shelf.`);
+    let books = [];
+    let pageIndex = 1;
+    // Max out requesting 10 pages.
+    while (pageIndex < MAX_GOODREADS_PAGES) {
+      const booksForPage =
+          await this.getBooksToReadForPage(goodreadsUserId, pageIndex, BOOKS_PER_PAGE);
+      books = books.concat(booksForPage);
+      console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books so far...`);
+      if (booksForPage.length == 0) {
+        // Reached the end, have all results.
+        break;
+      }
+      pageIndex++;
+    }
+    console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books on the "to-read" shelf.`);
+    return books;
+  }
+
+  /**
+   * Returns a promise resolving to a list of "to-read" books for the given
+   * Goodreads user id. Under the hood this uses makes a HTTP request and
+   * parses the XMl response (json not supported :/).
+   * The pageIndex param uses 1 as the first index.
+   * Docs: https://www.goodreads.com/api/index#reviews.list
+   */
+  getBooksToReadForPage(goodreadsUserId, pageIndex, booksPerPage) {
     const options = {
       uri: "https://www.goodreads.com/review/list",
       qs: {
@@ -33,8 +64,8 @@ class GoodreadsApi {
         "id": goodreadsUserId, // User-provided value, proceed with caution.
         "shelf": "to-read",
         "format": "xml", // No JSON :/
-        // TODO set back to 200
-        "per_page": 10, // TODO: Support list of >200 with paging.
+        "page": pageIndex,
+        "per_page": booksPerPage,
         "key": this.goodreadsKey,
       },
       headers: constants.COMMON_HEADERS,
@@ -59,6 +90,7 @@ class GoodreadsApi {
         if (err) {
           console.log(`[goodreads][${goodreadsUserId}]: Error parsing XML`);
           reject(err);
+          return;
         }
         const books = [];
         if (result && result.GoodreadsResponse && result.GoodreadsResponse.reviews &&
@@ -80,7 +112,6 @@ class GoodreadsApi {
             }
           }
         }
-        console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books on the "to-read" shelf.`);
         resolve(books);
       });
     });
