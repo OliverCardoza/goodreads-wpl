@@ -37,32 +37,7 @@ class WaterlooPublicLibraryApi {
     };
     return requestPromise(options)
       .then((response) => {
-        const $ = cheerio.load(response);
-        const results = $(".searchResult");
-        console.log(`[wpl][${title}]: Found ${results.length} results`);
-        const bookRecords = results.map((index, element) => {
-          const titleNode = $(element).find(".title");
-          const idAttr = $(element).attr("id");
-          const recordId = idAttr ? idAttr.replace("resultRecord-", "") : "";
-          const recordUrl =
-              recordId
-                  ? `https://encore.kpl.org/iii/encore_wpl/record/C__R${recordId}?lang=eng`
-                  : "";
-          const mediaTypeNode = $(element).find(".itemMediaDescription")
-          return {
-            title: titleNode.length ? titleNode.first().text().trim(): "",
-            recordId: recordId,
-            recordUrl: recordUrl,
-            mediaType:
-                mediaTypeNode.length ? mediaTypeNode.first().text().trim(): "",
-          };
-        }).get();
-        const filteredBookRecords = this.filterBookRecords(title, bookRecords);
-        console.log(
-            `[wpl][${title}]: Found ${filteredBookRecords.length} after filtering`);
-        return Promise.all(filteredBookRecords.map((bookRecord) => {
-          return this.getBookRecordAvailability(bookRecord);
-        }));
+        return this.parseBookSearchResults(response, title);
       })
       .then((bookRecords) => {
         return {
@@ -75,7 +50,39 @@ class WaterlooPublicLibraryApi {
         console.log(error);
         return error;
       });
- }
+  }
+
+  /**
+   * Parses the HTTP Document for a WPL search results page to return a list of book records.
+   */
+  parseBookSearchResults(response, title) {
+    const $ = cheerio.load(response);
+    const results = $(".searchResult");
+    console.log(`[wpl][${title}]: Found ${results.length} results`);
+    const bookRecords = results.map((index, element) => {
+      const titleNode = $(element).find(".title");
+      const idAttr = $(element).attr("id");
+      const recordId = idAttr ? idAttr.replace("resultRecord-", "") : "";
+      const recordUrl =
+          recordId
+              ? `https://encore.kpl.org/iii/encore_wpl/record/C__R${recordId}?lang=eng`
+              : "";
+      const mediaTypeNode = $(element).find(".itemMediaDescription")
+      return {
+        title: titleNode.length ? titleNode.first().text().trim(): "",
+        recordId: recordId,
+        recordUrl: recordUrl,
+        mediaType:
+            mediaTypeNode.length ? mediaTypeNode.first().text().trim(): "",
+      };
+    }).get();
+    const filteredBookRecords = this.filterBookRecords(title, bookRecords);
+    console.log(
+        `[wpl][${title}]: Found ${filteredBookRecords.length} after filtering`);
+    return Promise.all(filteredBookRecords.map((bookRecord) => {
+      return this.getBookRecordAvailability(bookRecord);
+    }));
+  }
 
   /**
    * Returns promise with book availability for a book record.
@@ -109,15 +116,11 @@ class WaterlooPublicLibraryApi {
     }
     // Remove header row.
     const dataRows = rows.slice(1, rows.length);
-    return dataRows.map((index, dataRowEl) => {
+    const availabilities = dataRows.map((index, dataRowEl) => {
       const dataColumns = $(dataRowEl).find("td");
       if (dataColumns.length < 3) {
         console.log(`[wpl][${bookRecordId}]: Availability row has less than 3 columns`);
-        return {
-          location: "",
-          callNumber: "",
-          status: "",
-        };
+        return null;
       }
       return {
         location: dataColumns.eq(0).text().trim(),
@@ -125,6 +128,7 @@ class WaterlooPublicLibraryApi {
         status: dataColumns.eq(2).text().trim(),
       };
     }).get();
+    return availabilities.filter((availability) => availability != null);
   }
 
   /**
