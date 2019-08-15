@@ -90,22 +90,41 @@ class WaterlooPublicLibraryApi {
     };
     return requestPromise(options)
       .then((response) => {
-        const $ = cheerio.load(response);
-        const rows = $(".itemTable").find("tr");
-        // Remove header row.
-        const dataRows = rows.slice(1, rows.length);
-        bookRecord.availabilities = dataRows.map((index, dataRowEl) => {
-          const dataColumns = $(dataRowEl).find("td");
-          return {
-            location: dataColumns.eq(0).text().trim(),
-            callNumber: dataColumns.eq(1).text().trim(),
-            status: dataColumns.eq(2).text().trim(),
-          };
-        }).get();
+        bookRecord.availabilities = this.parseBookAvailabilities(response, bookRecord.recordId);
         bookRecord.status = this.createBookStatus(bookRecord.availabilities);
         console.log(`[wpl][${bookRecord.recordId}]: Status = "${bookRecord.status}"`);
         return bookRecord;
       });
+  }
+
+  /**
+   * Parses the HTTP Document for a WPL book page to return an array of book availabilities.
+   */
+  parseBookAvailabilities(response, bookRecordId) {
+    const $ = cheerio.load(response);
+    const rows = $(".itemTable").find("tr");
+    if (rows.length === 0) {
+      console.log(`[wpl][${bookRecordId}]: Unable to find availability data.`);
+      return [];
+    }
+    // Remove header row.
+    const dataRows = rows.slice(1, rows.length);
+    return dataRows.map((index, dataRowEl) => {
+      const dataColumns = $(dataRowEl).find("td");
+      if (dataColumns.length < 3) {
+        console.log(`[wpl][${bookRecordId}]: Availability row has less than 3 columns`);
+        return {
+          location: "",
+          callNumber: "",
+          status: "",
+        };
+      }
+      return {
+        location: dataColumns.eq(0).text().trim(),
+        callNumber: dataColumns.eq(1).text().trim(),
+        status: dataColumns.eq(2).text().trim(),
+      };
+    }).get();
   }
 
   /**
@@ -122,7 +141,7 @@ class WaterlooPublicLibraryApi {
   createBookStatus(availabilities) {
     const availableRegex = /CHECK SHELVES/i;
     const numAvailable = availabilities.reduce((accumulator, availability) => {
-      if (availability.status.match(availableRegex)) {
+      if (availability && availability.status && availability.status.match(availableRegex)) {
         return accumulator + 1;
       }
       return accumulator;
