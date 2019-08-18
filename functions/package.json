@@ -7,7 +7,9 @@
     "shell": "firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "testGr": "curl localhost:5000/goodreads-library-345d3/us-central1/getGoodreadsBooks?goodreadsUserId=11714314-oliver",
+    "testWpl": "curl localhost:5000/goodreads-library-345d3/us-central1/getLibraryStatus?title=Cryptonomicon"
   },
   "engines": {
     "node": "8"

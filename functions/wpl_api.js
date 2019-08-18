@@ -129,7 +129,7 @@ class WaterlooPublicLibraryApi {
         status: dataColumns.eq(2).text().trim(),
       };
     }).get();
-    return availabilities.filter((availability) => availability != null);
+    return availabilities.filter((availability) => availability !== null);
   }
 
   /**

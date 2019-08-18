@@ -34,17 +34,19 @@ class GoodreadsApi {
     let books = [];
     let pageIndex = 1;
     // Max out requesting 10 pages.
+    /* eslint-disable no-await-in-loop */
     while (pageIndex < MAX_GOODREADS_PAGES) {
       const booksForPage =
           await this.getBooksToReadForPage(goodreadsUserId, pageIndex, BOOKS_PER_PAGE);
       books = books.concat(booksForPage);
       console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books so far...`);
-      if (booksForPage.length == 0) {
+      if (booksForPage.length === 0) {
         // Reached the end, have all results.
         break;
       }
       pageIndex++;
     }
+    /* eslint-enable no-await-in-loop */
     console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books on the "to-read" shelf.`);
     return books;
   }
