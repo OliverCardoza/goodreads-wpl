@@ -21,6 +21,7 @@ class WaterlooPublicLibraryApi {
    * a different version.
    */
   getBookAvailability(grBook) {
+    // TODO: support query without full grBook and potentially ISBN alone.
     const title = grBook.title;
     console.log(`[wpl][${title}]: Searching catalog...`);
     const normalizedTitle = this.normalizeBookTitle(title);

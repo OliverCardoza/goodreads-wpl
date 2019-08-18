@@ -54,3 +54,20 @@ exports.getGoodreadsBooks = functions.runWith(runtimeOpts).https.onRequest((requ
     });
 });
 
+exports.getLibraryStatus = functions.runWith(runtimeOpts).https.onRequest((request, response) => {
+  if (!request.query.title && !request.query.isbn) {
+    const errorMessage = "Missing query params: need either title or isbn to look up book";
+    console.log(errorMessage);
+    response.status(400).send(errorMessage);
+    return;
+  }
+  return wplApi.getBookAvailability(request.query)
+    .then((bookAvailability) => {
+      response
+        // Disable CORS for prototyping
+        // TODO: Re-enable and specify domain used
+        .set("Access-Control-Allow-Origin", "*")
+        .json(bookAvailability);
+      return;
+    })
+});
