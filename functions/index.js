@@ -37,3 +37,20 @@ exports.getBooks = functions.runWith(runtimeOpts).https.onRequest((request, resp
       return;
     });
 });
+
+exports.getGoodreadsBooks = functions.runWith(runtimeOpts).https.onRequest((request, response) => {
+  if (!request.query.goodreadsUserId) {
+    console.log("Missing goodreadsUserId URL param");
+    response.status(400).send("Missing goodreadsUserId URL param");
+    return;
+  }
+
+  return goodreadsApi.getBooksToRead(request.query.goodreadsUserId)
+    .then((grBooks) => {
+      // Disable CORS for prototyping
+      // TODO: Re-enable and specify domain used
+      response.set("Access-Control-Allow-Origin", "*").json(grBooks);
+      return;
+    });
+});
+
