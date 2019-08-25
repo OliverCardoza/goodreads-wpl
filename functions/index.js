@@ -47,9 +47,12 @@ exports.getGoodreadsBooks = functions.runWith(runtimeOpts).https.onRequest((requ
 
   return goodreadsApi.getBooksToRead(request.query.goodreadsUserId)
     .then((grBooks) => {
+      const responseData = {
+        "goodreadsBooks": grBooks,
+      };
       // Disable CORS for prototyping
       // TODO: Re-enable and specify domain used
-      response.set("Access-Control-Allow-Origin", "*").json(grBooks);
+      response.set("Access-Control-Allow-Origin", "*").json(responseData);
       return;
     });
 });
