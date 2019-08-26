@@ -95,28 +95,57 @@ class GoodreadsApi {
           return;
         }
         const books = [];
-        if (result && result.GoodreadsResponse && result.GoodreadsResponse.reviews &&
-            result.GoodreadsResponse.reviews.length > 0 &&
-            result.GoodreadsResponse.reviews[0].review &&
-            result.GoodreadsResponse.reviews[0].review.length > 0) {
-          const reviews = result.GoodreadsResponse.reviews[0].review;
-          for (let review of reviews) {
-            if (review.book && review.book.length > 0) {
-              const grBook = review.book[0];
-              const book = {
-                title: grBook.title.length > 0 ? grBook.title[0] : "",
-                isbn: grBook.isbn.length > 0 ? grBook.isbn[0] : "",
-                imageUrl: grBook.image_url.length > 0 ? grBook.image_url[0] : null,
-              };
-              book.imageUrl =
-                  this.maybeGetFallbackCoverUrl(book.imageUrl, book.isbn);
-              books.push(book);
-            }
-          }
+        if (!result || !result.GoodreadsResponse) {
+          console.log("Found no GoodreadsResponse in xml2js result.");
+          resolve(books);
+          return;
+        }
+        const reviews = this.getXmlProperty(result.GoodreadsResponse, "reviews");
+        if (!reviews || !reviews.review) {
+          resolve(books);
+          return;
+        }
+        for (let review of reviews.review) {
+          const grBook = this.getXmlProperty(review, "book", null /* defaultValue */);
+          const book = {
+            title: this.getXmlProperty(grBook, "title"),
+            isbn: this.getXmlProperty(grBook, "isbn"),
+            isbn13: this.getXmlProperty(grBook, "isbn13"),
+            goodreadsUrl: this.getXmlProperty(grBook, "link"),
+            imageUrl: this.getXmlProperty(grBook, "image_url", null /* defaultValue */),
+            author: this.getAuthorForBook(grBook),
+          };
+          book.imageUrl =
+              this.maybeGetFallbackCoverUrl(book.imageUrl, book.isbn);
+          books.push(book);
         }
         resolve(books);
       });
     });
+  }
+
+  /**
+   * Gets author for a book. This simplifies by returning the first author name if there are
+   * multiple.
+   */
+  getAuthorForBook(grBook) {
+    const authors = this.getXmlProperty(grBook, "authors", null /* defaultValue */);
+    if (!authors || !authors.author || authors.author.length === 0) {
+      return "";
+    }
+    return this.getXmlProperty(authors.author[0], "name");
+  }
+
+  /**
+   * Retrieves a property from an xml2js object. xml2js parses properties into
+   * an array even if it's not repeated. This will return the first value if
+   * multiple are defined.
+   */
+  getXmlProperty(xmlObject, propertyName, defaultValue="") {
+    if (!xmlObject || !xmlObject[propertyName] || xmlObject[propertyName].length === 0) {
+      return defaultValue;
+    }
+    return xmlObject[propertyName][0];
   }
 
   /**
