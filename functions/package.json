@@ -9,6 +9,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "testGr": "curl localhost:5000/goodreads-library-345d3/us-central1/getGoodreadsBooks?goodreadsUserId=11714314-oliver",
+    "testGr2": "curl localhost:5000/goodreads-library-345d3/us-central1/getGoodreadsBooks?goodreadsUserId=100923376-wpl-test",
     "testWpl": "curl localhost:5000/goodreads-library-345d3/us-central1/getLibraryStatus?title=Cryptonomicon"
   },
   "engines": {

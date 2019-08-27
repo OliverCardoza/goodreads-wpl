@@ -145,7 +145,15 @@ class GoodreadsApi {
     if (!xmlObject || !xmlObject[propertyName] || xmlObject[propertyName].length === 0) {
       return defaultValue;
     }
-    return xmlObject[propertyName][0];
+    const propertyValue = xmlObject[propertyName][0];
+    if (typeof propertyValue === "object" &&
+        propertyValue["$"] &&
+        propertyValue["$"]["nil"] &&
+        propertyValue["$"]["nil"] === "true") {
+      // Goodreads API returns <isbn nil="true" /> for empty nodes.
+      return defaultValue;
+    }
+    return propertyValue;
   }
 
   /**
