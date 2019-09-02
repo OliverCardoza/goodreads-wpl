@@ -121,7 +121,7 @@ class GoodreadsWplApp {
   
   setState(state) {
     this.state = state;
-    document.querySelector("#statusOutput").innerHTML = this.state
+    document.querySelector("#statusOutput").innerHTML = this.state;
   }
   
   setLibraryLoadedPercent(libraryLoadedPercent) {
