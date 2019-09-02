@@ -1,8 +1,5 @@
-<!-- Copied from my fiddle: https://jsfiddle.net/oliver_law/q1ydgsm6/86/ -->
 <html>
-  <head>
-  
-  </head>
+  <head></head>
   <body>
     <h1>Goodreads To-Read Shelf</h1>
     <p>
@@ -10,17 +7,51 @@
     </p>
     <label for="goodreads-id">Goodreads Profile ID:</label>
     <input id="goodreads-id" type="text" value="11714314-oliver" />
-    <table>
-      <thead>
-        <tr>
-          <td>Image</td>
-          <td>Title</td>
-          <td>ISBN</td>
-        </tr>
-      </thead>
-      <tbody id="books">
-        
-      </tbody>
-    </table>
+    
+    <div id="status">
+      <span>Goodreads Loaded Status:</span>
+      <span id="statusOutput"></span>
+    </div>
+    <div>
+      <span>Library Loaded Status:</span>
+      <span id="libraryPercentLoadedOutput">0%</span>
+    </div>
+    <div id="books"><div id="booksOutput"></div></div>
+    
+    <script type="text/html" id="goodreadsBooksTemplate">
+      {{#books}}
+      <div class="bookItem" id="book{{index}}">
+        <div class="bookImage">
+          <img src="{{goodreadsBook.imageUrl}}" />
+        </div>
+        <div class="bookDetails">
+          <h2>{{goodreadsBook.title}}</h2>
+          <p>Author: {{goodreadsBook.author}}</p>
+          <p>ISBN: {{goodreadsBook.isbn}}</p>
+          <p>ISBN 13: {{goodreadsBook.isbn13}}</p>
+          <p><a href="{{goodreadsBook.goodreadsUrl}}">Goodreads Link</a></p>
+          <div id="libraryBook{{index}}"></div>
+        </div>
+      </div>
+      {{/books}}
+    </script>  
+    <script type="text/html" id="libraryBooksTemplate">
+    	<table class="libraryBooks" border="1">
+        <thead>
+          <tr>
+            <td>Title</td>
+            <td>Availability</td>
+          </tr>
+        </thead>
+        <tbody>
+          {{#libraryBooks}}
+            <tr>
+              <td><a href="{{recordUrl}}">{{title}}</a></td>
+              <td>{{status}}</td>
+            </tr>
+          {{/libraryBooks}}
+        </tbody>
+      </table>
+    </script>
   </body>
 </html>
