@@ -55,6 +55,8 @@ const AppStateEnum = {
   LOADED: "Loaded",
 };
 
+const GOODREADS_PROFILE_ID_PARAM = "goodreadsProfileId";
+
 class GoodreadsWplApp {
   constructor() {
     // The primary data store for the app which is an Array of books.
@@ -73,10 +75,42 @@ class GoodreadsWplApp {
     
     this.requestQueue = new RequestQueue(5 /* maxParallelRequests */);
   }
+
+  getGoodreadsIdInput() {
+    return document.getElementById("goodreads-id");
+  }
   
-  start() {
+  getSubmitButton() {
+    return document.getElementById("submit");
+  }
+
+  init() {
+    this.getSubmitButton().addEventListener("click", () => this.onSubmitClicked());
+    const goodreadsProfileId = this.getGoodreadsProfileIdFromUrl();
+    if (goodreadsProfileId) {
+      this.loadBooks(goodreadsProfileId);
+    } else {
+      this.setState(AppStateEnum.UNINITIALIZED);
+    }
+  }
+
+  getGoodreadsProfileIdFromUrl() {
+    const url = new URL(window.location);
+    return url.searchParams.get(GOODREADS_PROFILE_ID_PARAM);
+  }
+
+  onSubmitClicked(event) {
+    const goodreadsProfileId = this.getGoodreadsIdInput().value;
+    if (goodreadsProfileId) {
+      this.loadBooks(goodreadsProfileId);
+    } else {
+      this.setState(AppStateEnum.UNINITIALIZED);
+    }
+  }
+
+  loadBooks(goodreadsProfileId) {
     this.setState(AppStateEnum.LOADING_GOODREADS);
-    this.fetchGoodreadsBooks().then((responseData) => {
+    this.fetchGoodreadsBooks(goodreadsProfileId).then((responseData) => {
       this.setGoodreadsBooks(responseData.goodreadsBooks);
       this.setState(AppStateEnum.LOADING_LIBRARY);
       this.fetchLibraryData().then(() => {
@@ -85,10 +119,8 @@ class GoodreadsWplApp {
     });
   }
   
-  fetchGoodreadsBooks() {
-    const profileId = document.getElementById("goodreads-id").value;
+  fetchGoodreadsBooks(profileId) {
     console.log(`Loading Goodreads data for profile ${profileId}`);
-
     const request = new XMLHttpRequest();
     const requestUrl = `https://us-central1-goodreads-library-345d3.cloudfunctions.net/getGoodreadsBooks?goodreadsUserId=${profileId}`;
     request.open("GET", requestUrl);
@@ -174,7 +206,7 @@ class GoodreadsWplApp {
 }
 
 const app = new GoodreadsWplApp();
-app.start();
+app.init();
 
 console.log("Goodbye Console");
 
