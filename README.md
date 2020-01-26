@@ -1,3 +1,7 @@
+## Demo
+
+https://olivercardoza.com/goodreads-wpl
+
 ## Debugging
 
 Start local webserver:
