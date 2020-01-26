@@ -6,30 +6,62 @@
   <body>
     <h1>Goodreads WPL</h1>
     <p>
-      Enter your Goodreads Profile ID to load your "To-Read" bookshelf.
+      Check which books on your <a href="https://goodreads.com">Goodreads</a> "Want To Read" list are available at the
+      <a href="https://wpl.ca">Waterloo Public Library</a>.
     </p>
-    <label for="goodreads-id">Goodreads Profile ID:</label>
-    <input id="goodreads-id" type="text" value="" />
-    <input id="submit" type="submit" value="Submit" />
-    
-    <div id="status">
-      <span>Goodreads Loaded Status:</span>
-      <span id="statusOutput"></span>
-    </div>
-    <div>
-      <span>Library Loaded Status:</span>
-      <span id="libraryPercentLoadedOutput">0%</span>
-    </div>
-    <div id="books"><div id="booksOutput"></div></div>
-    
+    <section>
+      <h2>Instructions</h2>
+      <ol>
+        <li>Log in to Goodreads: <a href="https://goodreads.com">https://goodreads.com</a> (sorry can't be the mobile app)</li>
+        <li>Navigate to your profile: Click picture top-right, then click "Profile"</li>
+        <li>
+          Copy profile ID from URL: It's the part at the end with numbers and dashes.
+          <br />
+          <code>goodreads.com/user/show/<b>100923376-wpl-test</b></code>
+        </li>
+        <li>Paste your profile ID into the lookup form below and click "Submit"</li>
+        <li>
+          Wait patiently as your books are loaded and looked up at the library.
+          <br />
+          This part can be quite slow if you have a lot of books.
+        </li>
+        <li>
+          After clicking "Submit" you can bookmark this page to skip the prior steps next time.
+          <br />
+          Your profile ID is saved in the URL.
+        </li>
+      </ol>
+    </section>
+    <section>
+      <h2>Goodreads Profile Lookup</h2>
+      <p>
+        Enter your Goodreads Profile ID to load your "Want To Read" book list.
+      </p>
+     <label for="goodreads-id">Goodreads Profile ID:</label>
+     <input id="goodreads-id" type="text" value="" />
+     <input id="submit" type="submit" value="Submit" />
+      <div id="status">
+        <span>Goodreads Loaded Status:</span>
+        <span id="statusOutput"></span>
+      </div>
+      <div>
+        <span>Library Loaded Status:</span>
+        <span id="libraryPercentLoadedOutput">0%</span>
+      </div>
+    </section>
+    <section id="books">
+      <div id="booksOutput"></div>
+    </section>
+
     <script type="text/html" id="goodreadsBooksTemplate">
+      <h2>Books</h2>
       {{#books}}
       <div class="bookItem" id="book{{index}}">
         <div class="bookImage">
           <img src="{{goodreadsBook.imageUrl}}" />
         </div>
         <div class="bookDetails">
-          <h2>{{goodreadsBook.title}}</h2>
+          <h3>{{goodreadsBook.title}}</h3>
           <p>Author: {{goodreadsBook.author}}</p>
           <p>ISBN: {{goodreadsBook.isbn}}</p>
           <p>ISBN 13: {{goodreadsBook.isbn13}}</p>
