@@ -59,6 +59,9 @@ const GOODREADS_PROFILE_ID_PARAM = "goodreadsProfileId";
 
 class GoodreadsWplApp {
   constructor() {
+    // The Goodreads Profile ID currently in use on the app.
+    this.currentGoodreadsProfileId = "";
+
     // The primary data store for the app which is an Array of books.
     // This array is mutated after fetching data from Goodreads and again after checking
     // library availability.
@@ -101,7 +104,12 @@ class GoodreadsWplApp {
 
   onSubmitClicked(event) {
     const goodreadsProfileId = this.getGoodreadsIdInput().value;
-    if (goodreadsProfileId) {
+    if (goodreadsProfileId &&
+        goodreadsProfileId != this.currentsGoodreadsProfileId) {
+      window.history.pushState(
+          goodreadsProfileId,
+          goodreadsProfileId,
+          `?${GOODREADS_PROFILE_ID_PARAM}=${goodreadsProfileId}`);
       this.loadBooks(goodreadsProfileId);
     } else {
       this.setState(AppStateEnum.UNINITIALIZED);
@@ -109,6 +117,7 @@ class GoodreadsWplApp {
   }
 
   loadBooks(goodreadsProfileId) {
+    this.currentGoodreadsProfileId = goodreadsProfileId;
     this.setState(AppStateEnum.LOADING_GOODREADS);
     this.fetchGoodreadsBooks(goodreadsProfileId).then((responseData) => {
       this.setGoodreadsBooks(responseData.goodreadsBooks);
