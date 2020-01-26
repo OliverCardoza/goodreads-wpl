@@ -88,7 +88,13 @@ class GoodreadsWplApp {
   }
 
   init() {
-    this.getSubmitButton().addEventListener("click", () => this.onSubmitClicked());
+    this.getSubmitButton().addEventListener("click", (event) => this.onSubmitClicked(event));
+    this.getGoodreadsIdInput().addEventListener("keydown", (event) => {
+      if (event.key == "Enter") {
+        this.onSubmitClicked(event);
+      }
+    });
+
     const goodreadsProfileId = this.getGoodreadsProfileIdFromUrl();
     if (goodreadsProfileId) {
       this.getGoodreadsIdInput().value = goodreadsProfileId;
