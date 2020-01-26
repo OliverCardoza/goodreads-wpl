@@ -91,6 +91,7 @@ class GoodreadsWplApp {
     this.getSubmitButton().addEventListener("click", () => this.onSubmitClicked());
     const goodreadsProfileId = this.getGoodreadsProfileIdFromUrl();
     if (goodreadsProfileId) {
+      this.getGoodreadsIdInput().value = goodreadsProfileId;
       this.loadBooks(goodreadsProfileId);
     } else {
       this.setState(AppStateEnum.UNINITIALIZED);
