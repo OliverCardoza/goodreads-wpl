@@ -57,6 +57,8 @@ const AppStateEnum = {
 
 const GOODREADS_PROFILE_ID_PARAM = "goodreadsProfileId";
 
+const DEFAULT_GOODREADS_PROFILE_ID = "100923376-wpl-test";
+
 class GoodreadsWplApp {
   constructor() {
     // The Goodreads Profile ID currently in use on the app.
@@ -95,13 +97,12 @@ class GoodreadsWplApp {
       }
     });
 
-    const goodreadsProfileId = this.getGoodreadsProfileIdFromUrl();
-    if (goodreadsProfileId) {
-      this.getGoodreadsIdInput().value = goodreadsProfileId;
-      this.loadBooks(goodreadsProfileId);
-    } else {
-      this.setState(AppStateEnum.UNINITIALIZED);
+    let goodreadsProfileId = this.getGoodreadsProfileIdFromUrl();
+    if (!goodreadsProfileId) {
+      goodreadsProfileId = DEFAULT_GOODREADS_PROFILE_ID;
     }
+    this.getGoodreadsIdInput().value = goodreadsProfileId;
+    this.loadBooks(goodreadsProfileId, /* updateUrlParam= */ false);
   }
 
   getGoodreadsProfileIdFromUrl() {
@@ -113,17 +114,19 @@ class GoodreadsWplApp {
     const goodreadsProfileId = this.getGoodreadsIdInput().value;
     if (goodreadsProfileId &&
         goodreadsProfileId != this.currentsGoodreadsProfileId) {
-      window.history.pushState(
-          goodreadsProfileId,
-          goodreadsProfileId,
-          `?${GOODREADS_PROFILE_ID_PARAM}=${goodreadsProfileId}`);
-      this.loadBooks(goodreadsProfileId);
+      this.loadBooks(goodreadsProfileId, /* updateUrlParam= */ true);
     } else {
       this.setState(AppStateEnum.UNINITIALIZED);
     }
   }
 
-  loadBooks(goodreadsProfileId) {
+  loadBooks(goodreadsProfileId, updateUrlParam) {
+    if (updateUrlParam) {
+      window.history.pushState(
+          goodreadsProfileId,
+          goodreadsProfileId,
+          `?${GOODREADS_PROFILE_ID_PARAM}=${goodreadsProfileId}`);
+    }
     this.currentGoodreadsProfileId = goodreadsProfileId;
     this.setState(AppStateEnum.LOADING_GOODREADS);
     this.fetchGoodreadsBooks(goodreadsProfileId).then((responseData) => {
