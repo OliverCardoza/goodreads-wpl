@@ -51,8 +51,15 @@ const AppStateEnum = {
   UNINITIALIZED: "Uninitialized",
   LOADING_GOODREADS: "Loading Goodreads books...",
   LOADING_LIBRARY: "Loading Library book data...",
-  ERROR: "Error",
+  ERROR: "Error, oh no!",
   LOADED: "Loaded",
+};
+
+const SimpleStateEnum = {
+  UNINITIALIZED: "Uninitialized",
+  LOADING: "Loading...",
+  ERROR: "Error, oh no!",
+  LOADED: "Loaded!",
 };
 
 const GOODREADS_PROFILE_ID_PARAM = "goodreadsProfileId";
@@ -75,18 +82,27 @@ class GoodreadsWplApp {
     // State of the app.
     this.state = AppStateEnum.UNINITIALIZED;
     
-    // Percentage of books with library data.
-    this.libraryLoadedPercent = 0;
-    
     this.requestQueue = new RequestQueue(5 /* maxParallelRequests */);
   }
 
   getGoodreadsIdInput() {
-    return document.getElementById("goodreads-id");
+    return document.getElementById("goodreadsId");
   }
   
   getSubmitButton() {
     return document.getElementById("submit");
+  }
+
+  getOverallStatusElement() {
+    return document.getElementById("overallStatus");
+  }
+
+  getGoodreadsStatusElement() {
+    return document.getElementById("goodreadsStatus");
+  }
+
+  getWplStatusElement() {
+    return document.getElementById("wplStatus");
   }
 
   init() {
@@ -172,12 +188,27 @@ class GoodreadsWplApp {
   
   setState(state) {
     this.state = state;
-    document.querySelector("#statusOutput").innerHTML = this.state;
+    this.getOverallStatusElement().innerHTML = this.state;
+
+    if (this.state == AppStateEnum.UNINITIALIZED) {
+      this.getGoodreadsStatusElement().innerHTML = SimpleStateEnum.UNINITIALIZED;
+      this.getWplStatusElement().innerHTML = SimpleStateEnum.UNINITIALIZED;
+    } else if (this.state == AppStateEnum.LOADING_GOODREADS) {
+      this.getGoodreadsStatusElement().innerHTML = SimpleStateEnum.LOADING;
+      this.getWplStatusElement().innerHTML = SimpleStateEnum.UNINITIALIZED;
+    } else if (this.state == AppStateEnum.LOADING_LIBRARY) {
+      this.getGoodreadsStatusElement().innerHTML = SimpleStateEnum.LOADED;
+      this.setLibraryStatus(/* booksLoaded= */ 0, this.books.length);
+    } else if (this.statue == AppStateEnum.ERROR) {
+      this.getGoodreadsStatusElement().innerHTML = SimpleStateEnum.ERROR;
+      this.getWplStatusElement().innerHTML = SimpleStateEnum.ERROR;
+    }
   }
   
-  setLibraryLoadedPercent(libraryLoadedPercent) {
-    this.libraryLoadedPercent = libraryLoadedPercent;
-    document.querySelector("#libraryPercentLoadedOutput").innerHTML = this.libraryLoadedPercent + "%";
+  setLibraryStatus(booksLoaded, totalBooks) {
+    const percentLoaded = Math.round((booksLoaded / totalBooks) * 100);
+    this.getWplStatusElement().innerHTML =
+        `${percentLoaded}% loaded (${booksLoaded} / ${totalBooks} books)`;
   }
   
   async fetchLibraryData() {
@@ -190,7 +221,7 @@ class GoodreadsWplApp {
         const libraryBooksEl = document.querySelector(`#libraryBook${book.index}`);
         libraryBooksEl.innerHTML = Mustache.render(libraryBooksTemplate, {libraryBooks: book.libraryBooks});
         booksLoaded++;
-        this.setLibraryLoadedPercent(Math.round((booksLoaded / this.books.length) * 100));
+        this.setLibraryStatus(booksLoaded, this.books.length);
       });
     }
   }

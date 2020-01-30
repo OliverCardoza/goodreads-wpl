@@ -38,16 +38,26 @@
       <p>
         Enter your Goodreads Profile ID to load your "Want To Read" book list.
       </p>
-     <label for="goodreads-id">Goodreads Profile ID:</label>
-     <input id="goodreads-id" type="text" value="" />
-     <input id="submit" type="submit" value="Submit" />
-      <div id="status">
-        <span>Goodreads Loaded Status:</span>
-        <span id="statusOutput"></span>
-      </div>
+      <label for="goodreadsId">Goodreads Profile ID:</label>
+      <input id="goodreadsId" type="text" value="" />
+      <input id="submit" type="submit" value="Submit" />
+    </section>
+    <section>
       <div>
-        <span>Library Loaded Status:</span>
-        <span id="libraryPercentLoadedOutput">0%</span>
+        <p>
+          <span>Lookup Status:</span>
+          <span id="overallStatus"></span>
+        </p>
+        <ul>
+          <li>
+            <span>Stage 1 - Goodreads Lookup:</span>
+            <span id="goodreadsStatus"></span>
+          </li>
+          <li>
+            <span>Stage 2 - Library Lookup:</span>
+            <span id="wplStatus"></span>
+          </li>
+        </ul>
       </div>
     </section>
     <section id="books">
@@ -73,6 +83,7 @@
       {{/books}}
     </script>  
     <script type="text/html" id="libraryBooksTemplate">
+      <h3>Library Availability</h3>
     	<table class="libraryBooks" border="1">
         <thead>
           <tr>
