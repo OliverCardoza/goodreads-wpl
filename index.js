@@ -211,19 +211,22 @@ class GoodreadsWplApp {
         `${percentLoaded}% loaded (${booksLoaded} / ${totalBooks} books)`;
   }
   
-  async fetchLibraryData() {
+  fetchLibraryData() {
     const libraryBooksTemplate = document.querySelector("#libraryBooksTemplate").innerText;
+    const libraryPromises = [];
     let booksLoaded = 0;
     // Load library data one at a time to limit active requests to WPL site.
     for (let [index, book] of this.books.entries()) {
-      this.fetchLibraryBooks(book).then((libraryBooks) => {
+      const libraryPromise = this.fetchLibraryBooks(book).then((libraryBooks) => {
         book.libraryBooks = libraryBooks;
         const libraryBooksEl = document.querySelector(`#libraryBook${book.index}`);
         libraryBooksEl.innerHTML = Mustache.render(libraryBooksTemplate, {libraryBooks: book.libraryBooks});
         booksLoaded++;
         this.setLibraryStatus(booksLoaded, this.books.length);
       });
+      libraryPromises.push(libraryPromise);
     }
+    return Promise.all(libraryPromises);
   }
   
   fetchLibraryBooks(book) {
