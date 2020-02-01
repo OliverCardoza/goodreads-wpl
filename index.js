@@ -212,7 +212,6 @@ class GoodreadsWplApp {
   }
   
   fetchLibraryData() {
-    const libraryBooksTemplate = document.querySelector("#libraryBooksTemplate").innerText;
     const libraryPromises = [];
     let booksLoaded = 0;
     // Load library data one at a time to limit active requests to WPL site.
@@ -220,13 +219,26 @@ class GoodreadsWplApp {
       const libraryPromise = this.fetchLibraryBooks(book).then((libraryBooks) => {
         book.libraryBooks = libraryBooks;
         const libraryBooksEl = document.querySelector(`#libraryBook${book.index}`);
-        libraryBooksEl.innerHTML = Mustache.render(libraryBooksTemplate, {libraryBooks: book.libraryBooks});
+        this.renderLibraryBooks(libraryBooks, libraryBooksEl);
         booksLoaded++;
         this.setLibraryStatus(booksLoaded, this.books.length);
       });
       libraryPromises.push(libraryPromise);
     }
     return Promise.all(libraryPromises);
+  }
+
+  renderLibraryBooks(libraryBooks, libraryBooksEl) {
+    let htmlContent;
+    if (libraryBooks && libraryBooks.length) {
+      const libraryBooksTemplate = document.querySelector("#libraryBooksTemplate").innerText;
+      htmlContent = Mustache.render(libraryBooksTemplate, {libraryBooks: libraryBooks});
+    } else {
+      const libraryBooksEmptyTemplate =
+          document.querySelector("#libraryBooksEmptyTemplate").innerText;
+      htmlContent =Mustache.render(libraryBooksEmptyTemplate, {});
+    }
+    libraryBooksEl.innerHTML = htmlContent;
   }
   
   fetchLibraryBooks(book) {
