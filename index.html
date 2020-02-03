@@ -61,7 +61,14 @@
       </div>
     </section>
     <section id="books">
-      <div id="booksOutput"></div>
+      <div id="booksOutput">
+        <p>Loading...</p>
+        <div class="loadingRing">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
     </section>
 
     <script type="text/html" id="goodreadsBooksTemplate">
@@ -77,13 +84,20 @@
           <p>ISBN: {{goodreadsBook.isbn}}</p>
           <p>ISBN 13: {{goodreadsBook.isbn13}}</p>
           <p><a href="{{goodreadsBook.goodreadsUrl}}">Goodreads Link</a></p>
-          <div id="libraryBook{{index}}"></div>
+          <h4>Library Availability</h4>
+          <div id="libraryBook{{index}}">
+            <p>Loading library data...</p>
+            <div class="loadingRing">
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
         </div>
       </div>
       {{/books}}
     </script>  
     <script type="text/html" id="libraryBooksTemplate">
-      <h4>Library Availability</h4>
     	<table class="libraryBooks" border="1">
         <thead>
           <tr>
@@ -102,7 +116,6 @@
       </table>
     </script>
     <script type="text/html" id="libraryBooksEmptyTemplate">
-      <h3>Library Availability</h3>
       <p>No matches found! :(</p>
     </script>
     <script type="text/javascript" src="index.js"></script>
