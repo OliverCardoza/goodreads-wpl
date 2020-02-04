@@ -1,6 +1,6 @@
 ## TODO
 
-CSS: https://dohliam.github.io/dropin-minimal-css/
+*   Filter results by availability
 
 ## Demo
 

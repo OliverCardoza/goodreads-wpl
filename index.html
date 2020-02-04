@@ -1,15 +1,18 @@
 <html>
   <head>
     <title>Goodreads WPL</title>
+    <link rel="stylesheet" type="text/css" href="water.css" />
     <link rel="stylesheet" type="text/css" href="index.css" />
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
   </head>
   <body>
-    <h1>Goodreads WPL</h1>
-    <p>
-      Find books on your <a href="https://goodreads.com">Goodreads</a> reading list that are available at the
-      <a href="https://wpl.ca">Waterloo Public Library</a>.
-    </p>
+    <section>
+      <h1>Goodreads WPL</h1>
+      <p>
+        Find books at the <a href="https://wpl.ca">Waterloo Public Library</a>
+        from your <a href="https://goodreads.com">Goodreads</a> reading list.
+      </p>
+    </section>
     <section>
       <h2>Instructions</h2>
       <ol>
@@ -38,9 +41,11 @@
       <p>
         Enter your Goodreads Profile ID to load your "Want To Read" book list.
       </p>
-      <label for="goodreadsId">Goodreads Profile ID:</label>
-      <input id="goodreadsId" type="text" value="" />
-      <input id="submit" type="submit" value="Submit" />
+      <div>
+        <label for="goodreadsId">Goodreads Profile ID:</label>
+        <input id="goodreadsId" type="text" value="" />
+        <input id="submit" type="submit" value="Submit" />
+      </div>
     </section>
     <section>
       <div>
