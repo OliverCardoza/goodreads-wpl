@@ -19,6 +19,18 @@
   max-width: 600px;
 }
 
+.libraryBooks {
+  table-layout: fixed;
+}
+
+.libraryTitle {
+  width: 60%;
+}
+
+.libraryAvailability {
+  width: 40%;
+}
+
 /** Loading Ring, based on loading.io.. */
 
 .loadingRing {
