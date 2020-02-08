@@ -167,18 +167,23 @@ class GoodreadsWplApp {
   }
 
   onFilterClicked(event) {
+    for (let [index, book] of this.books.entries()) {
+      this.updateBookVisibility(index);
+    }
+  }
+
+  updateBookVisibility(bookIndex) {
     const showAvailable = this.getBooksAvailableToggle().checked;
     const showUnavailable = this.getBooksUnavailableToggle().checked;
     const showNoMatches = this.getBooksNoMatchesToggle().checked;
-    for (let [index, book] of this.books.entries()) {
-      const availability = this.getLibraryAvailabilityEnum(book.libraryBooks);
-      const displayBook =
-          showAvailable && availability == LibraryAvailabilityEnum.AVAILABLE ||
-          showUnavailable && availability == LibraryAvailabilityEnum.UNAVAILABLE ||
-          showNoMatches && availability == LibraryAvailabilityEnum.NO_MATCHES;
-      const bookEl = document.querySelector(`#book${index}`);
-      bookEl.style.display = displayBook ? "flex" : "none";
-    }
+    const book = this.books[bookIndex];
+    const availability = this.getLibraryAvailabilityEnum(book.libraryBooks);
+    const displayBook =
+        showAvailable && availability == LibraryAvailabilityEnum.AVAILABLE ||
+        showUnavailable && availability == LibraryAvailabilityEnum.UNAVAILABLE ||
+        showNoMatches && availability == LibraryAvailabilityEnum.NO_MATCHES;
+    const bookEl = document.querySelector(`#book${bookIndex}`);
+    bookEl.style.display = displayBook ? "flex" : "none";
   }
 
   getLibraryAvailabilityEnum(libraryBooks) {
@@ -284,6 +289,7 @@ class GoodreadsWplApp {
     for (let [index, book] of this.books.entries()) {
       const libraryPromise = this.fetchLibraryBooks(book).then((libraryBooks) => {
         book.libraryBooks = libraryBooks;
+        this.updateBookVisibility(index);
         const libraryBooksEl = document.querySelector(`#libraryBook${book.index}`);
         this.renderLibraryBooks(libraryBooks, libraryBooksEl);
         booksLoaded++;
@@ -302,7 +308,7 @@ class GoodreadsWplApp {
     } else {
       const libraryBooksEmptyTemplate =
           document.querySelector("#libraryBooksEmptyTemplate").innerText;
-      htmlContent =Mustache.render(libraryBooksEmptyTemplate, {});
+      htmlContent = Mustache.render(libraryBooksEmptyTemplate, {});
     }
     libraryBooksEl.innerHTML = htmlContent;
   }
