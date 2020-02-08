@@ -1,7 +1,3 @@
-## TODO
-
-*   Filter results by availability
-
 ## Demo
 
 https://olivercardoza.com/goodreads-wpl

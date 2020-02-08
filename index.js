@@ -62,6 +62,13 @@ const SimpleStateEnum = {
   LOADED: "Loaded!",
 };
 
+const LibraryAvailabilityEnum = {
+  UNDEFINED: "Undefined",
+  AVAILABLE: "Available",
+  UNAVAILABLE: "Unavailable",
+  NO_MATCHES: "No Matches",
+};
+
 const GOODREADS_PROFILE_ID_PARAM = "goodreadsProfileId";
 
 const DEFAULT_GOODREADS_PROFILE_ID = "100923376-wpl-test";
@@ -105,13 +112,20 @@ class GoodreadsWplApp {
     return document.getElementById("wplStatus");
   }
 
+  getBooksAvailableToggle() {
+    return document.getElementById("booksAvailableToggle");
+  }
+
+  getBooksUnavailableToggle() {
+    return document.getElementById("booksUnavailableToggle");
+  }
+
+  getBooksNoMatchesToggle() {
+    return document.getElementById("booksNoMatchesToggle");
+  }
+
   init() {
-    this.getSubmitButton().addEventListener("click", (event) => this.onSubmitClicked(event));
-    this.getGoodreadsIdInput().addEventListener("keydown", (event) => {
-      if (event.key == "Enter") {
-        this.onSubmitClicked(event);
-      }
-    });
+    this.registerEventListeners();
 
     let goodreadsProfileId = this.getGoodreadsProfileIdFromUrl();
     if (!goodreadsProfileId) {
@@ -119,6 +133,22 @@ class GoodreadsWplApp {
     }
     this.getGoodreadsIdInput().value = goodreadsProfileId;
     this.loadBooks(goodreadsProfileId, /* updateUrlParam= */ false);
+  }
+
+  registerEventListeners() {
+    this.getSubmitButton().addEventListener("click", (event) => this.onSubmitClicked(event));
+    this.getGoodreadsIdInput().addEventListener("keydown", (event) => {
+      if (event.key == "Enter") {
+        this.onSubmitClicked(event);
+      }
+    });
+
+    this.getBooksAvailableToggle()
+        .addEventListener("click", (event) => this.onFilterClicked(event));
+    this.getBooksUnavailableToggle()
+        .addEventListener("click", (event) => this.onFilterClicked(event));
+    this.getBooksNoMatchesToggle()
+        .addEventListener("click", (event) => this.onFilterClicked(event));
   }
 
   getGoodreadsProfileIdFromUrl() {
@@ -134,6 +164,42 @@ class GoodreadsWplApp {
     } else {
       this.setState(AppStateEnum.UNINITIALIZED);
     }
+  }
+
+  onFilterClicked(event) {
+    const showAvailable = this.getBooksAvailableToggle().checked;
+    const showUnavailable = this.getBooksUnavailableToggle().checked;
+    const showNoMatches = this.getBooksNoMatchesToggle().checked;
+    for (let [index, book] of this.books.entries()) {
+      const availability = this.getLibraryAvailabilityEnum(book.libraryBooks);
+      const displayBook =
+          showAvailable && availability == LibraryAvailabilityEnum.AVAILABLE ||
+          showUnavailable && availability == LibraryAvailabilityEnum.UNAVAILABLE ||
+          showNoMatches && availability == LibraryAvailabilityEnum.NO_MATCHES;
+      const bookEl = document.querySelector(`#book${index}`);
+      bookEl.style.display = displayBook ? "flex" : "none";
+    }
+  }
+
+  getLibraryAvailabilityEnum(libraryBooks) {
+    if (!libraryBooks) {
+      return LibraryAvailabilityEnum.NO_MATCHES;
+    }
+    let hasMatches = false;
+    const availableRegex = /CHECK SHELVES/i;
+    for (const libraryBook of libraryBooks) {
+      if (libraryBook.availabilities) {
+        hasMatches = true;
+      }
+      for (const availability of libraryBook.availabilities) {
+        if (availability.status.match(availableRegex)) {
+          return LibraryAvailabilityEnum.AVAILABLE;
+        }
+      }
+    }
+    return hasMatches
+      ? LibraryAvailabilityEnum.UNAVAILABLE
+      : LibraryAvailabilityEnum.NO_MATCHES;
   }
 
   loadBooks(goodreadsProfileId, updateUrlParam) {
