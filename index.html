@@ -88,11 +88,17 @@
           <img src="{{goodreadsBook.imageUrl}}" />
         </div>
         <div class="bookDetails">
-          <h3>{{goodreadsBook.title}}</h3>
+          <h3>
+            <a href="{{goodreadsBook.goodreadsUrl}}" target="_blank">
+              {{goodreadsBook.title}}
+            </a>
+          </h3>
           <p>Author: {{goodreadsBook.author}}</p>
-          <p>ISBN: {{goodreadsBook.isbn}}</p>
-          <p>ISBN 13: {{goodreadsBook.isbn13}}</p>
-          <p><a href="{{goodreadsBook.goodreadsUrl}}">Goodreads Link</a></p>
+          <details>
+            <summary>Book Details</summary>
+            <p>ISBN: {{goodreadsBook.isbn}}</p>
+            <p>ISBN 13: {{goodreadsBook.isbn13}}</p>
+          </details>
           <h4>Library Availability</h4>
           <div id="libraryBook{{index}}">
             <p>Loading library data...</p>
