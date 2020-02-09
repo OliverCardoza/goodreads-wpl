@@ -38,12 +38,12 @@ class GoodreadsApi {
     while (pageIndex < MAX_GOODREADS_PAGES) {
       const booksForPage =
           await this.getBooksToReadForPage(goodreadsUserId, pageIndex, BOOKS_PER_PAGE);
-      books = books.concat(booksForPage);
-      console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books so far...`);
       if (booksForPage.length === 0) {
         // Reached the end, have all results.
         break;
       }
+      books = books.concat(booksForPage);
+      console.log(`[goodreads][${goodreadsUserId}]: Found ${books.length} books so far...`);
       pageIndex++;
     }
     /* eslint-enable no-await-in-loop */
@@ -77,9 +77,9 @@ class GoodreadsApi {
         return this.getBooksFromXmlResponse(response, goodreadsUserId);
       })
       .catch((error) => {
-        console.log(`[goodreads][${goodreadsUserId}]: found error`);
-        console.log(error);
-        return error;
+        // Log error with user id here but propagate up for handling.
+        console.log(`[goodreads][${goodreadsUserId}]: Error loading books from Goodreads.`);
+        throw error;
       });
   }
 

@@ -35,6 +35,13 @@ exports.getBooks = functions.runWith(runtimeOpts).https.onRequest((request, resp
         .set("Access-Control-Allow-Origin", "*")
         .json(books);
       return;
+    })
+    .catch((error) => {
+      console.log("[getBooks] Error loading books.");
+      response.json({
+        error: error.toString(),
+      });
+      return;
     });
 });
 
@@ -53,6 +60,13 @@ exports.getGoodreadsBooks = functions.runWith(runtimeOpts).https.onRequest((requ
       // Disable CORS for prototyping
       // TODO: Re-enable and specify domain used
       response.set("Access-Control-Allow-Origin", "*").json(responseData);
+      return;
+    })
+    .catch((error) => {
+      console.log("[getGoodreadsBooks] Error loading books from Goodreads.");
+      response.json({
+        error: error.toString(),
+      });
       return;
     });
 });
@@ -73,4 +87,11 @@ exports.getLibraryStatus = functions.runWith(runtimeOpts).https.onRequest((reque
         .json(bookAvailability);
       return;
     })
+    .catch((error) => {
+      console.log("[getLibraryStatus] Error loading books from library.");
+      response.json({
+        error: error.toString(),
+      });
+      return;
+    });
 });
