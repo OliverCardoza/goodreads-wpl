@@ -5,7 +5,7 @@
 
 .bookImage {
   height: auto;
-  width: 200px;
+  width: 25%;
 }
 
 .bookImage > img {
@@ -15,8 +15,7 @@
 }
 
 .bookDetails {
-  /* Necessary to keep book image and details of uniform width. */
-  max-width: 600px;
+  width: 75%;
 }
 
 .libraryBooks {
