@@ -9,6 +9,13 @@ const constants = require("./constants");
  */
 class WaterlooPublicLibraryApi {
   constructor() {
+    /** Define a cookie jar to pass cookie auth and avoid redirect loops. */
+    this.cookieJar = requestPromise.jar();
+    // TODO: This might expire. If it does then rethink this whole request-promise thing.
+    // Ideally there should be a request library that can keep cookie state through redirects.
+    this.cookieJar.setCookie(
+        "JSESSIONID=5100F4DF5A87E8F91095371F6103B93A; Path=/iii/encore_wpl/; HttpOnly",
+        "https://encore.kpl.org");
   }
 
   /**
@@ -35,6 +42,8 @@ class WaterlooPublicLibraryApi {
       headers: constants.COMMON_HEADERS,
       // Required because some search results pages have some insecure content.
       insecure: true,
+      // Inlude a cookie jar to pass cookie-redirect logic in the request flow.
+      jar: this.cookieJar,
     };
     return requestPromise(options)
       .then((response) => {
@@ -95,6 +104,8 @@ class WaterlooPublicLibraryApi {
       headers: constants.COMMON_HEADERS,
       // Required because some search results pages have some insecure content.
       insecure: true,
+      // Inlude a cookie jar to pass cookie-redirect logic in the request flow.
+      jar: this.cookieJar,
     };
     return requestPromise(options)
       .then((response) => {
