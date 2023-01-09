@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.3",
-    "firebase-admin": "^8.9.2",
-    "firebase-functions": "^3.3.0",
+    "firebase-admin": "^11.4.1",
+    "firebase-functions": "^3.24.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
     "xml2js": "^0.4.23"
